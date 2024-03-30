@@ -1,96 +1,100 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const taskNameInput = document.getElementById('taskName');
-    const taskDetailInput = document.getElementById('taskDetail');
-    const addTaskForm = document.getElementById('add-task');
-    const remainingTasksList = document.getElementById('remainingTasks');
-    const doneTasksList = document.getElementById('doneTasks');
+document.addEventListener("DOMContentLoaded", () => {
+    const taskNameInput = document.getElementById("taskName");
+    const taskDetailInput = document.getElementById("taskDetail");
+    const taskForm = document.getElementById("add-task");
+    const remainingTask = document.getElementById("remainingTasks");
+    const doneTask = document.getElementById("doneTasks");
 
     let tasks = [];
+    getTask();
 
-    fetchTasks();
-
-    addTaskForm.addEventListener('submit', async function (e) {
+    taskForm.addEventListener("submit", async function (e) {
         e.preventDefault();
-        const taskName = taskNameInput.value.trim();
-        const taskDetail = taskDetailInput.value.trim();
-
-        if (taskName !== '' && taskDetail !== '') {
-            const newTask = { name: taskName, detail: taskDetail, done: false };
+        const newName = taskNameInput.value.trim();
+        const newDetail = taskDetailInput.value.trim();
+        if (newName && newDetail) {
+            const newTask = {
+                name: newName,
+                detail: newDetail,
+                done: false,
+            };
             await createTask(newTask);
-            taskNameInput.value = '';
-            taskDetailInput.value = '';
+
+            taskForm.reset();
         }
     });
 
-    function renderTasks() {
-        remainingTasksList.innerHTML = '';
-        doneTasksList.innerHTML = '';
-
-        tasks.forEach((task, index) => {
-            const li = document.createElement('li');
-            li.textContent = `${task.name} - ${task.detail}`;
-
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = task.done;
-            checkbox.addEventListener('change', function () {
-                tasks[index].done = this.checked;
-                updateTask(task._id, tasks[index]);
-                renderTasks();
-            });
-
-            const deleteBtn = document.createElement('button');
-            deleteBtn.textContent = 'Delete';
-            deleteBtn.addEventListener('click', function () {
-                deleteTask(task._id);
-            });
-
-            li.appendChild(checkbox);
-            li.appendChild(deleteBtn);
-
-            if (task.done) {
-                doneTasksList.appendChild(li);
-            } else {
-                remainingTasksList.appendChild(li);
-            }
-        });
-    }
-
-    async function fetchTasks() {
+    async function getTask() {
         try {
-            const response = await axios.get('https://crudcrud.com/api/bb9e5a5699734ecba1eb78c075fa8f44/tasks');
-            tasks = response.data;
-            renderTasks();
+            const res = await axios.get(
+                "https://crudcrud.com/api/8f5b315b6a9d474a94db1f59e8dcbf66/tasks"
+            );
+            tasks = res.data;
+            renderList();
         } catch (error) {
-            console.error('Error fetching tasks:', error);
+            console.error("Error fetching data", error);
         }
     }
-
     async function createTask(task) {
         try {
-            const response = await axios.post('https://crudcrud.com/api/bb9e5a5699734ecba1eb78c075fa8f44/tasks', task);
-            tasks.push(response.data);
-            renderTasks();
+            const res = await axios.post(
+                "https://crudcrud.com/api/8f5b315b6a9d474a94db1f59e8dcbf66/tasks",
+                task
+            );
+            tasks.push(res.data);
+            renderList();
         } catch (error) {
-            console.error('Error creating task:', error);
+            console.error("Error in creating a task", error);
         }
     }
-
     async function updateTask(taskId, updatedTask) {
         try {
-            await axios.put(`https://crudcrud.com/api/bb9e5a5699734ecba1eb78c075fa8f44/tasks/${taskId}`, updatedTask);
-        } catch (error) {
-            console.error('Error updating task:', error);
+            await axios.put(`https://crudcrud.com/api/8f5b315b6a9d474a94db1f59e8dcbf66/tasks/${taskId}`,
+                updatedTask
+            );
+        } catch (err) {
+            console.error("Error updating task", err);
         }
     }
 
     async function deleteTask(taskId) {
         try {
-            await axios.delete(`https://crudcrud.com/api/bb9e5a5699734ecba1eb78c075fa8f44/tasks/${taskId}`);
-            tasks = tasks.filter(task => task._id !== taskId);
-            renderTasks();
-        } catch (error) {
-            console.error('Error deleting task:', error);
+            const res = await axios.delete(
+                `https://crudcrud.com/api/8f5b315b6a9d474a94db1f59e8dcbf66/tasks/${taskId}`
+            );
+            tasks = tasks.filter((task) => task._id !== taskId);
+            renderList();
+        } catch (err) {
+            console.error("Error in deleting task", err);
         }
+    }
+
+    function renderList() {
+        remainingTask.innerHTML = "";
+        doneTask.innerHTML = "";
+        tasks.forEach((task, index) => {
+            const list = document.createElement("li");
+            list.textContent = `${task.name} - ${task.detail}`;
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.checked = task.done;
+            checkbox.addEventListener("change", function () {
+                tasks[index].done = this.checked;
+                updateTask(task._id, tasks[index]);
+                renderList();
+            });
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Delete";
+            deleteBtn.addEventListener("click", () => {
+                deleteTask(task._id);
+            });
+            list.appendChild(checkbox);
+            list.appendChild(deleteBtn);
+            if (task.done) {
+                doneTask.appendChild(list);
+            } else {
+                remainingTask.appendChild(list);
+            }
+        });
     }
 });
